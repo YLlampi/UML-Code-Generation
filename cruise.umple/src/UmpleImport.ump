@@ -1,0 +1,309 @@
+/*
+
+Copyright: All contributers to the Umple Project
+
+This file is made available subject to the open source license found at:
+http://umple.org/license
+
+Model for importing XMI and generating Umple code
+
+*/
+
+namespace cruise.umple.compiler;
+
+/* 
+ * SAX, streamed-base push JAXP API
+ */
+external DefaultHandler{}
+external interface Comparator{}
+
+class UmpleImportHandler
+{
+  abstract;
+
+  depend java.io.File;
+  depend java.io.IOException;
+  depend java.io.InputStream;
+  depend java.io.FileInputStream;
+  depend java.util.Optional;
+  depend java.nio.file.Paths;
+  depend javax.xml.parsers.ParserConfigurationException;
+  depend javax.xml.parsers.SAXParser;
+  depend javax.xml.parsers.SAXParserFactory;
+  depend org.xml.sax.Attributes;
+  depend org.xml.sax.SAXException;
+  depend org.xml.sax.SAXParseException;
+  depend org.xml.sax.helpers.DefaultHandler;
+  isA DefaultHandler;
+}
+
+/* 
+ * Parse ECore by extend SAX handler callbacks
+ */
+class EcoreImportHandler
+{ 
+  depend java.io.File;
+  depend java.io.IOException;
+  depend java.io.InputStream;
+  depend java.io.FileInputStream;
+  depend java.util.Optional;
+  depend java.nio.file.Paths;
+  depend javax.xml.parsers.ParserConfigurationException;
+  depend javax.xml.parsers.SAXParser;
+  depend javax.xml.parsers.SAXParserFactory;
+  depend org.xml.sax.Attributes;
+  depend org.xml.sax.SAXException;
+  depend org.xml.sax.SAXParseException;
+  depend org.xml.sax.helpers.DefaultHandler;
+  isA UmpleImportHandler;
+}
+
+/*
+ * Parse SCXML by extend SAX handler callbacks
+ */
+class ScxmlImportHandler
+{
+  depend java.io.File;
+  depend java.io.IOException;
+  depend java.io.InputStream;
+  depend java.io.FileInputStream;
+  depend java.util.Optional;
+  depend java.util.Stack;
+  depend java.nio.file.Paths;
+  depend javax.xml.parsers.ParserConfigurationException;
+  depend javax.xml.parsers.SAXParser;
+  depend javax.xml.parsers.SAXParserFactory;
+  depend org.xml.sax.Attributes;
+  depend org.xml.sax.SAXException;
+  depend org.xml.sax.SAXParseException;
+  depend org.xml.sax.helpers.DefaultHandler;
+
+  isA UmpleImportHandler;
+}
+
+/*
+ * Parse Papyrus
+ */
+class PapyrusImportHandler
+{
+  depend java.io.File;
+  depend java.io.IOException;
+  depend java.io.InputStream;
+  depend java.io.FileInputStream;
+  depend java.util.Optional;
+  depend java.util.Stack;
+  depend java.util.List;
+  depend java.util.ArrayList;
+  depend java.nio.file.Paths;
+  depend javax.xml.parsers.ParserConfigurationException;
+  depend javax.xml.parsers.SAXParser;
+  depend javax.xml.parsers.SAXParserFactory;
+  depend org.xml.sax.Attributes;
+  depend org.xml.sax.SAXException;
+  depend org.xml.sax.SAXParseException;
+  depend org.xml.sax.helpers.DefaultHandler;
+
+  isA UmpleImportHandler;
+}
+
+/**
+ * ImportType is a "enumeration" of information for what type of 
+ * file was imported. 
+ * 
+ * @since 19 Mar 2015
+ */
+class UmpleImportType {
+
+  depend java.util.*;
+
+  // http://eclipse.org/ecoretools/
+  const UmpleImportType ECORE = new UmpleImportType("ecore", "ECore");
+  
+  // http://en.wikipedia.org/wiki/SCXML
+  const UmpleImportType SCXML = new UmpleImportType("scxml", "State-Chart XML");
+    
+ // http://www.eclipse.org/papyrus/
+  const UmpleImportType PAPYRUS = new UmpleImportType("uml", "Papyrus XML");
+
+  const Set<UmpleImportType> ALL = new HashSet<>(Arrays.asList(ECORE, SCXML, PAPYRUS));
+  
+  /** 
+   * The file type of an import, i.e. the extension. 
+   */ 
+  immutable String fileType;  
+  
+  /**
+   * Longform description of the type. 
+   */
+  immutable String name;
+  
+}
+
+class UmpleImportHandlerFactory {
+  // Singleton Instance of the class. 
+  const UmpleImportHandlerFactory INSTANCE = new UmpleImportHandlerFactory();
+
+}
+
+/* 
+* Defines import prototype for package, class, interface 
+* and associations
+*/ 
+class UmpleImportElement
+{
+  abstract;
+
+  //identifier from xmi
+  id;
+  //name attribute from xmi
+  name;
+  StringBuilder umpleBuilder = new StringBuilder();
+
+  abstract String generateUmple();
+  }
+
+class ImportStateMachineElement
+{
+  abstract;
+  isA UmpleImportElement;
+
+  0..1 -> * ImportStateMachineElement;
+
+  Integer depth;
+  String elemName;
+  String initialState = null;
+  String finalState = null;
+}
+
+/* 
+ * integration of all importElements as a model
+ */ 
+class UmpleImportModel
+{   
+  depend cruise.umple.util.SampleFileWriter;
+  
+  0..1 -> * UmpleImportElement;
+  
+  currentPackageName; 
+}
+
+class UmpleImportPackage
+{
+  isA UmpleImportElement;
+}
+
+class UmpleImportClass
+{
+  isA UmpleImportElement;
+  
+  0..1 -> * UmpleImportAttribute;
+  0..1 -> 0..1 UmpleImportGeneralization;
+  0..1 -> * UmpleImportAssociation;
+  0..1 -> * ImportStateMachine;
+  
+  packageName;
+  Boolean isAbstract;
+  Boolean isInterface;
+  String[] superTypes;
+}
+
+class UmpleImportAttribute
+{
+  isA UmpleImportElement;
+  
+  className;
+  dataType;
+  //primitive type as default
+  lazy Integer lowerBound;
+  //primitive type as default
+  Integer upperBound=1;
+}
+
+class UmpleImportGeneralization
+{
+  isA UmpleImportElement;
+
+  generalization;
+}
+
+class UmpleImportAssociation
+{
+  depend cruise.umple.util.StringFormatter;
+  
+  isA UmpleImportElement;
+  
+  //root class
+  startClass;
+  //eType
+  endClass;
+  //eOpposite
+  endClassName;
+    lazy Integer lowerBound;
+  Integer upperBound = 1;
+  lazy Integer otherLowerBound;
+  Integer otherUpperBound = 1;
+}
+
+class ImportStateMachine {
+  isA ImportStateMachineElement;
+}
+
+class ImportStateMachineState {
+  isA ImportStateMachineElement;
+}
+
+class ImportTransition {
+  isA ImportStateMachineElement;
+
+  String cond;
+  String target;
+  StringBuilder action = new StringBuilder();
+}
+
+class ImportAction {
+  isA ImportStateMachineElement;
+
+  StringBuilder content = new StringBuilder();
+}
+
+class StateComparator
+{
+  isA Comparator;
+
+  depend java.util.Comparator;
+
+  String initialState;
+}
+
+class UmpleImportConstants
+{
+  singleton;
+  
+  const XMI_TYPE="xsi:type";
+  const XMI_NAME="name";
+  const XMI_PACKAGENAME="nsURI";
+  const XMI_INTERFACE="interface";
+  const XMI_ABSTRACT="abstract";
+  const XMI_SUPERTYPE="eSuperTypes";
+  const XMI_UPPER = "upperBound";
+  const ECORE_PACKAGE = "ecore:EPackage";
+  const ECORE_CLASS = "ecore:EClass";
+  const ECORE_ATTRIBUTE = "ecore:EAttribute";
+  const ECORE_TYPE = "eType";
+  const ECORE_DATATYPE = "ecore:EDataType";
+  const ECORE_REFERENCE = "ecore:EReference";
+  const PAPYRUS_TYPE = "xmi:type";
+  const PAPYRUS_PROPERTY = "uml:Property";
+  const PAPYRUS_HREF = "href";
+  const PAPYRUS_PRIMITIVE_TYPE = "uml:PrimitiveType";
+  const PAPYRUS_CLASS = "uml:Class";
+  const PAPYRUS_ASSOCIATION = "uml:Association";
+  const PAPYRUS_ID = "xmi:id";
+  const PAPYRUS_ASSOCIATION_MEMBER_END= "memberEnd";
+  const PAPYRUS_OWNED_END_ASSOCIATION = "association";
+  const PAPYRUS_OWNED_END_VALUE = "value";
+  const PAPYRUS_GENERAL = "general";
+}
+
+use UmpleImport_CodeHandlers.ump;
+use UmpleImport_CodeModels.ump;

@@ -1,0 +1,18 @@
+#!/bin/csh -fb
+# Minify the Javascript files ... see also build.umple.xml and _load.js for same list
+
+cat \
+ prototype.js \
+ dom.js \
+ ajax.js \
+ helper.js \
+ json.js \
+ debugger.js \
+ shCore.js \
+ shBrush*.js \
+ inlineeditor.js \
+ dropbox/*.js \
+ umple_*.js \
+ structureDiagram.js \
+ statetable/state_table_colourer.js \
+ | yuicompressor --type js --line-break 132 > allumple-min.js

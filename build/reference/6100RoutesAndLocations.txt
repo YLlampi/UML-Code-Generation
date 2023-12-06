@@ -1,0 +1,14 @@
+Routes And Locations
+Examples
+noreferences
+
+@@description
+
+<p>This example has been built for the <a href="https://dl.acm.org/doi/pdf/10.1145/2459031.2459032">Comparing Modeling Approaches Workshop</a></p>
+
+<img src="examples/RoutesAndLocations.png" width="90%" title="Routes and Locations"/>
+
+
+@@example
+@@source RoutesAndLocations.ump
+@@endexample
